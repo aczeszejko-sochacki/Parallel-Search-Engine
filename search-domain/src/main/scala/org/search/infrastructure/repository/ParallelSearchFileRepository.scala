@@ -6,10 +6,11 @@ import cats.effect.kernel.{Async, Concurrent}
 import fs2.io.file.{Files, Path}
 import fs2.Stream
 import org.search.core.domain.{Occurrence, Phrase}
-import org.search.core.services.SearchService
-import org.search.infrastructure.repository.FileRepository.Config
+import org.search.core.services.ParSearchService
+import org.search.infrastructure.repository.ParallelSearchFileRepository.Config
 
-class FileRepository[F[_]: Files: Monad: Async](config: Config, searchService: SearchService[F]) {
+class ParallelSearchFileRepository[F[_]: Files: Monad: Async](config: Config,
+                                                              parSearchService: ParSearchService[F]) {
 
   def parSearchFiles(phrase: Phrase, parCompareEnabled: Boolean): F[List[Occurrence]] =
     for {
@@ -20,21 +21,9 @@ class FileRepository[F[_]: Files: Monad: Async](config: Config, searchService: S
   def parSearchFile(file: Path, phrase: Phrase, parCompareEnabled: Boolean): F[List[Occurrence]] =
     readFile(file)
       .through(
-        if (parCompareEnabled) searchService.parSearchPhrase(file, phrase)
-        else                   searchService.parSearchPhraseParCompare(file, phrase)
+        if (parCompareEnabled) parSearchService.parSearchPhrase(file, phrase)
+        else                   parSearchService.parSearchPhraseParCompare(file, phrase)
       )
-      .compile
-      .toList
-
-  def searchFiles(phrase: Phrase): F[List[Occurrence]] =
-    for {
-      files   <- getAll
-      results <- files.init.traverse(searchFile(_, phrase))
-    } yield results.flatten
-
-  def searchFile(file: Path, phrase: Phrase): F[List[Occurrence]] =
-    readFile(file)
-      .through(searchService.searchPhrase(file, phrase))
       .compile
       .toList
 
@@ -45,6 +34,6 @@ class FileRepository[F[_]: Files: Monad: Async](config: Config, searchService: S
     Files[F].readAll(path)
 }
 
-object FileRepository {
+object ParallelSearchFileRepository {
   case class Config(rootPath: String)
 }

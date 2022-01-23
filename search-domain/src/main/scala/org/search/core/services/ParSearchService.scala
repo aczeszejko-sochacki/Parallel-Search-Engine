@@ -2,13 +2,12 @@ package org.search.core.services
 
 import cats.effect.Concurrent
 import cats.implicits._
-import fs2.io.file.Path
 import fs2.{Chunk, Pipe, Stream}
+import fs2.io.file.Path
 import org.search.core.domain.{Occurrence, Phrase}
-import org.search.core.services.SearchService.Config
+import org.search.core.services.ParSearchService.Config
 
-class SearchService[F[_]: Concurrent](config: Config) {
-
+class ParSearchService[F[_]: Concurrent](config: Config) {
   def parSearchPhrase(file: Path, phrase: Phrase): Pipe[F, Byte, Occurrence] =
     prepareChunks(_, phrase)
       .parEvalMapUnordered(config.parallelism){
@@ -20,13 +19,6 @@ class SearchService[F[_]: Concurrent](config: Config) {
     prepareChunks(_, phrase)
       .parEvalMapUnordered(config.parallelism){
         case (chunk, offset) => exactParPatternMatch(phrase, chunk).product(offset.pure[F])
-      }
-      .through(buildOccurrences(file))
-
-  def searchPhrase(file: Path, phrase: Phrase): Pipe[F, Byte, Occurrence] =
-    prepareChunks(_, phrase)
-      .evalMap {
-        case (chunk, offset) => (exactPatternMatch(phrase, chunk), offset).pure[F]
       }
       .through(buildOccurrences(file))
 
@@ -54,6 +46,6 @@ class SearchService[F[_]: Concurrent](config: Config) {
     phrase.toBytes == chunk.toList
 }
 
-object SearchService {
+object ParSearchService {
   case class Config(parallelism: Int, phraseChunkSize: Int)
 }

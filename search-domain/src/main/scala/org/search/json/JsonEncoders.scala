@@ -1,4 +1,4 @@
-package org.search.util.json
+package org.search.json
 
 import fs2.io.file.Path
 import io.circe._

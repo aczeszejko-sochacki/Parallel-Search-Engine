@@ -3,7 +3,7 @@ ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "com.example"
 ThisBuild / organizationName := "example"
 
-lazy val `search-server` = project
+lazy val `search-domain`= project
   .settings(
     libraryDependencies ++= Dependencies.searchServer,
     scalacOptions ++= Seq(
@@ -11,6 +11,47 @@ lazy val `search-server` = project
       "-unchecked",
       "-deprecation",
       "-Xfatal-warnings",
-      "-language:higherKinds",
+      "-language:higherKinds"
     )
   )
+
+lazy val `search-server-protobuf` = project
+  .settings(
+    libraryDependencies ++= Dependencies.searchServer,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Xfatal-warnings",
+      "-language:higherKinds"
+    )
+  )
+  .enablePlugins(Fs2Grpc)
+
+lazy val `search-server` = project
+  .dependsOn(`search-domain`, `search-server-protobuf`)
+  .settings(
+    libraryDependencies ++= Dependencies.searchServer,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Xfatal-warnings",
+      "-language:higherKinds"
+    )
+  )
+  .enablePlugins(Fs2Grpc)
+
+lazy val `search-server-grpc` = project
+  .dependsOn(`search-domain`, `search-server-protobuf`)
+  .settings(
+    libraryDependencies ++= Dependencies.searchServer,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Xfatal-warnings",
+      "-language:higherKinds"
+    )
+  )
+  .enablePlugins(Fs2Grpc)
