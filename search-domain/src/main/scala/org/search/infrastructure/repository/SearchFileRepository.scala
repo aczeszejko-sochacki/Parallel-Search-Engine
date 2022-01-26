@@ -9,12 +9,14 @@ import org.search.core.domain.{Occurrence, Phrase}
 import org.search.core.services.SearchService
 import org.search.infrastructure.repository.SearchFileRepository.Config
 
+import java.io.File
+
 class SearchFileRepository[F[_]: Files: Monad: Async](config: Config,
                                                       searchService: SearchService[F]) {
   def searchFiles(phrase: Phrase): F[List[Occurrence]] =
     for {
       files   <- getAll
-      results <- files.tail.traverse(searchFile(_, phrase))
+      results <- files.traverse(searchFile(_, phrase))
     } yield results.flatten
 
   def searchFile(file: Path, phrase: Phrase): F[List[Occurrence]] =
@@ -24,7 +26,11 @@ class SearchFileRepository[F[_]: Files: Monad: Async](config: Config,
       .toList
 
   def getAll: F[List[Path]] =
-    Files[F].walk(Path(config.rootPath)).compile.toList
+    Files[F]
+      .walk(Path(config.rootPath))
+      .filter(path => new File(path.toString).isFile)
+      .compile
+      .toList
 
   def readFile(path: Path): Stream[F, Byte] =
     Files[F].readAll(path)
