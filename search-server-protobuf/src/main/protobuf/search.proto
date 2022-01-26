@@ -2,18 +2,14 @@ syntax = "proto3";
 
 package org.search.protos;
 
-// The greeting service definition.
 service SearchRemote {
-  // Sends a greeting
   rpc Search (SearchRemoteRequest) returns (SearchRemoteReply) {}
 }
 
-// The request message containing the user's name.
 message SearchRemoteRequest {
   string phrase = 1;
 }
 
-// The response message containing the greetings
 message SearchRemoteReply {
   string result = 1;
 }
