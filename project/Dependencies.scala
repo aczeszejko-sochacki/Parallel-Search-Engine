@@ -55,12 +55,17 @@ object Dependencies {
       "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion
     )
 
-  val searchServer: Seq[ModuleID] =
+  val searchDomain: Seq[ModuleID] =
     catsEffect3 ++
       fs2 ++
-      http4s ++
       circe ++
       logging ++
-      pureconfig ++
-      grpcNetty
+      pureconfig
+
+  val searchServer: Seq[ModuleID] = http4s ++ grpcNetty
+
+  val searchServerGrpc: Seq[ModuleID] = grpcNetty
+
+  val searchServerProtoBuf: Seq[ModuleID] = fs2
+
 }
